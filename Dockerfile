@@ -7,16 +7,17 @@ RUN a2enmod rewrite
 ENV INSTALL_DIR /var/www/html
 
 #RUN cd /tmp && \
-    #curl https://codeload.github.com/OpenMage/magento-mirror/tar.gz/$MAGENTO_VERSION -o $MAGENTO_VERSION.tar.gz && \
-    #tar xvf $MAGENTO_VERSION.tar.gz && \
-    #mv magento-mirror-$MAGENTO_VERSION/* magento-mirror-$MAGENTO_VERSION/.htaccess $INSTALL_DIR
-
-#RUN chown -R www-data:www-data $INSTALL_DIR
+#    curl https://codeload.github.com/OpenMage/magento-mirror/tar.gz/$MAGENTO_VERSION -o $MAGENTO_VERSION.tar.gz && \
+#    tar xvf $MAGENTO_VERSION.tar.gz && \
+#    mv magento-mirror-$MAGENTO_VERSION/* magento-mirror-$MAGENTO_VERSION/.htaccess $INSTALL_DIR
 
 RUN apt-get update && \
     apt-get install -y mysql-client-5.7 libxml2-dev libmcrypt4 libmcrypt-dev libpng-dev libjpeg-dev libfreetype6 libfreetype6-dev git && \
-    cd /tmp && git clone https://github.com/dlqkadl/magento-mirror /tmp && mv /tmp/* /tmp/.htaccess $INSTALL_DIR
+    mkdir /tmp/magento-demo && git clone https://github.com/mengchong2018/magento-mirror /tmp/magento-demo && \
+    mv /tmp/magento-demo/* /tmp/magento-demo/.htaccess $INSTALL_DIR
+    
 RUN chown -R www-data:www-data $INSTALL_DIR
+
 RUN docker-php-ext-install soap
 RUN docker-php-ext-install pdo_mysql
 RUN docker-php-ext-install mcrypt
@@ -28,10 +29,13 @@ RUN chmod +x /usr/local/bin/install-magento
 
 COPY ./sampledata/magento-sample-data-1.9.1.0.tgz /opt/
 COPY ./bin/install-sampledata-1.9 /usr/local/bin/install-sampledata
+COPY ./redis.conf $INSTALL_DIR/app/etc/
 RUN chmod +x /usr/local/bin/install-sampledata
 
 RUN bash -c 'bash < <(curl -s -L https://raw.github.com/colinmollenhour/modman/master/modman-installer)'
 RUN mv ~/bin/modman /usr/local/bin
+
+RUN service apache2 restart
 
 WORKDIR $INSTALL_DIR
 
